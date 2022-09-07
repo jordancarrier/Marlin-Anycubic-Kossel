@@ -62,9 +62,9 @@
 //
 #ifndef Z_MIN_PROBE_PIN
   #if ENABLED(BLTOUCH)
-    #define Z_MIN_PROBE_PIN                 PB7
+    #define Z_MIN_PROBE_PIN                 Z2_DIAG_PIN
   #else
-    #define Z_MIN_PROBE_PIN                 PC5   // Probe (Proximity switch) port
+    #define Z_MIN_PROBE_PIN                 Z2_DIAG_PIN   // Probe (Proximity switch) port
   #endif
 #endif
 
@@ -242,11 +242,11 @@
 #define HEATER_BED_PIN                      PA1   // Hotbed
 #define HEATER_0_PIN                        PA2   // Heater0
 #define HEATER_1_PIN                        PA3   // Heater1
-#define HEATER_2_PIN                        PB10  // Heater2
-#define HEATER_3_PIN                        PB11  // Heater3
+//#define HEATER_2_PIN                        PB10  // Heater2
+//#define HEATER_3_PIN                        PB11  // Heater3
 
-#define FAN_PIN                             PA8   // Fan0
-#define FAN1_PIN                            PE5   // Fan1
+#define FAN_PIN                             PB10   // Fan0 PA8
+#define FAN1_PIN                            PB11   // Fan1 PE5
 #define FAN2_PIN                            PD12  // Fan2
 #define FAN3_PIN                            PD13  // Fan3
 #define FAN4_PIN                            PD14  // Fan4
