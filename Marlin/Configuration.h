@@ -59,16 +59,19 @@
 //===========================================================================
 
 /**
- * Here are some standard links for getting your machine calibrated:
+ * Here are some useful links to help get your machine configured and calibrated:
  *
- * http://www.lpomykal.cz/3d-printers/kossel/
- * https://reprap.org/wiki/Calibration
- * https://youtu.be/wAL9d7FgInk
- * http://calculator.josefprusa.cz
- * https://reprap.org/wiki/Triffid_Hunter%27s_Calibration_Guide
- * https://www.thingiverse.com/thing:5573
- * https://sites.google.com/site/repraplogphase/calibration-of-your-reprap
- * https://www.thingiverse.com/thing:298812
+ * Example Configs:     https://github.com/MarlinFirmware/Configurations/branches/all
+ *
+ * Průša Calculator:    https://blog.prusaprinters.org/calculator_3416/
+ *
+ * Calibration Guides:  https://reprap.org/wiki/Calibration
+ *                      https://reprap.org/wiki/Triffid_Hunter%27s_Calibration_Guide
+ *                      https://sites.google.com/site/repraplogphase/calibration-of-your-reprap
+ *                      https://youtu.be/wAL9d7FgInk
+ *
+ * Calibration Objects: https://www.thingiverse.com/thing:5573
+ *                      https://www.thingiverse.com/thing:1278865
  */
 
 // @section info
@@ -149,7 +152,7 @@
 //#define BLUETOOTH
 
 // Name displayed in the LCD "Ready" message and Info menu
-#define CUSTOM_MACHINE_NAME "CLINSPARKS V2.0.9"
+#define CUSTOM_MACHINE_NAME "Kossel Linear Plus V2.1.2"
 
 // Printer's unique ID, used by some programs to differentiate between machines.
 // Choose your own or use a service like https://www.uuidgenerator.net/version4
@@ -674,10 +677,8 @@
 #define PID_K1 0.95      // Smoothing factor within any PID loop
 
 #if ENABLED(PIDTEMP)
-  #define PID_EDIT_MENU           // Add PID editing to the "Advanced Settings" menu. (~700 bytes of PROGMEM)
-  #define PID_AUTOTUNE_MENU       // Add PID auto-tuning to the "Advanced Settings" menu. (~250 bytes of PROGMEM)
   //#define PID_PARAMS_PER_HOTEND // Uses separate PID parameters for each extruder (useful for mismatched extruders)
-                                  // Set/get with gcode: M301 E[extruder number, 0-2]
+                                  // Set/get with G-code: M301 E[extruder number, 0-2]
                                   
   // Anycubic Kossel - run 'M106 S255' & 'M303 E0 C10 S200'
   #if ENABLED(PID_PARAMS_PER_HOTEND)
@@ -699,7 +700,6 @@
  * Use a physical model of the hotend to control temperature. When configured correctly
  * this gives better responsiveness and stability than PID and it also removes the need
  * for PID_EXTRUSION_SCALING and PID_FAN_SCALING. Use M306 T to autotune the model.
- * @section mpctemp
  */
 #if ENABLED(MPCTEMP)
   //#define MPC_EDIT_MENU                             // Add MPC editing to the "Advanced Settings" menu. (~1300 bytes of flash)
@@ -769,7 +769,6 @@
 
 #if ENABLED(PIDTEMPBED)
   //#define MIN_BED_POWER 0
-  //#define PID_BED_DEBUG // Print Bed PID debug data to the serial port.
 
   // Anycubic Kossel
   // this is for the aluminium bed with a BuildTak-like sticker on it
@@ -785,7 +784,7 @@
     #define DEFAULT_bedKd 482.59
   #endif
 
-  //#define PID_BED_DEBUG // Sends debug data to the serial port.
+  //#define PID_BED_DEBUG // Print Bed PID debug data to the serial port.
 
   // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
 #endif // PIDTEMPBED
@@ -836,13 +835,14 @@
 #endif // PIDTEMPCHAMBER
 
 #if ANY(PIDTEMP, PIDTEMPBED, PIDTEMPCHAMBER)
+  //#define PID_DEBUG             // Sends debug data to the serial port. Use 'M303 D' to toggle activation.
   //#define PID_OPENLOOP          // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
   //#define SLOW_PWM_HEATERS      // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
   #define PID_FUNCTIONAL_RANGE 10 // If the temperature difference between the target temperature and the actual temperature
                                   // is more than PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
 
-  //#define PID_EDIT_MENU         // Add PID editing to the "Advanced Settings" menu. (~700 bytes of flash)
-  //#define PID_AUTOTUNE_MENU     // Add PID auto-tuning to the "Advanced Settings" menu. (~250 bytes of flash)
+  #define PID_EDIT_MENU           // Add PID editing to the "Advanced Settings" menu. (~700 bytes of flash)
+  #define PID_AUTOTUNE_MENU       // Add PID auto-tuning to the "Advanced Settings" menu. (~250 bytes of flash)
 #endif
 
 // @section safety
@@ -908,36 +908,33 @@
 //===========================================================================
 // Enable DELTA kinematics and most of the default configuration for Deltas
 #define DELTA
-
 #if ENABLED(DELTA)
 
   // Make delta curves from many straight lines (linear interpolation).
   // This is a trade-off between visible corners (not enough segments)
   // and processor overload (too many expensive sqrt calls).
-  #define DELTA_SEGMENTS_PER_SECOND 80
+  #define DEFAULT_SEGMENTS_PER_SECOND 80
 
   // After homing move down to a height where XY movement is unconstrained
   //#define DELTA_HOME_TO_SAFE_ZONE
 
   // Delta calibration menu
-  // uncomment to add three points calibration menu option.
+  // Add three-point calibration to the MarlinUI menu.
   // See http://minow.blogspot.com/index.html#4918805519571907051
   #define DELTA_CALIBRATION_MENU
 
-  // uncomment to add G33 Delta Auto-Calibration (Enable EEPROM_SETTINGS to store results)
+  // G33 Delta Auto-Calibration. Enable EEPROM_SETTINGS to store results.
   #if ANYCUBIC_PROBE_VERSION > 0
     #define DELTA_AUTO_CALIBRATION
   #endif
 
-  // NOTE NB all values for DELTA_* values MUST be floating point, so always have a decimal point in them
-
   #if ENABLED(DELTA_AUTO_CALIBRATION)
-    // set the default number of probe points : n*n (1 -> 7)
+    // Default number of probe points : n*n (1 -> 7)
     #define DELTA_CALIBRATION_DEFAULT_POINTS 4
   #endif
 
   #if EITHER(DELTA_AUTO_CALIBRATION, DELTA_CALIBRATION_MENU)
-    // Set the steprate for papertest probing
+    // Step size for paper-test probing
     #define PROBE_MANUALLY_STEP 0.05      // (mm)
   #endif
 
@@ -949,11 +946,11 @@
     // Center-to-center distance of the holes in the diagonal push rods.
     #define DELTA_DIAGONAL_ROD 254        // (mm)
     // Horizontal offset from middle of printer to smooth rod center.
-    #define DELTA_SMOOTH_ROD_OFFSET 186   // (mm)
+    #define DELTA_SMOOTH_ROD_OFFSET 177   // (mm)
     // Horizontal offset of the universal joints on the end effector.
-    #define DELTA_EFFECTOR_OFFSET 31      // (mm)
+    #define DELTA_EFFECTOR_OFFSET 42      // (mm)
     // Horizontal offset of the universal joints on the carriages.
-    #define DELTA_CARRIAGE_OFFSET 20.6    // (mm)
+    #define DELTA_CARRIAGE_OFFSET 17    // (mm)
     // Horizontal distance bridged by diagonal push rods when effector is centered.
     #define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-(DELTA_EFFECTOR_OFFSET)-(DELTA_CARRIAGE_OFFSET))          // (mm) Get this value from G33 auto calibrate
   #else
@@ -1141,6 +1138,9 @@
 //#define USE_IMIN_PLUG
 //#define USE_JMIN_PLUG
 //#define USE_KMIN_PLUG
+//#define USE_UMIN_PLUG
+//#define USE_VMIN_PLUG
+//#define USE_WMIN_PLUG
 #define USE_XMAX_PLUG
 #define USE_YMAX_PLUG
 #define USE_ZMAX_PLUG
@@ -1205,9 +1205,21 @@
 #define X_MIN_ENDSTOP_INVERTING false  // Set to true to invert the logic of the endstop.
 #define Y_MIN_ENDSTOP_INVERTING false  // Set to true to invert the logic of the endstop.
 #define Z_MIN_ENDSTOP_INVERTING (ANYCUBIC_PROBE_VERSION + 0 == 1) // V1 is NO, V2 is NC
+#define I_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define J_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define K_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define U_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define V_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define W_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 #define X_MAX_ENDSTOP_INVERTING false  // Set to true to invert the logic of the endstop.
 #define Y_MAX_ENDSTOP_INVERTING false  // Set to true to invert the logic of the endstop.
 #define Z_MAX_ENDSTOP_INVERTING false  // Set to true to invert the logic of the endstop.
+#define I_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define J_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define K_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define U_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define V_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
+#define W_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 #define Z_MIN_PROBE_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
 
 /**
@@ -1271,7 +1283,6 @@
 //=============================================================================
 // @section motion
 
-// delta speeds must be the same on xyz
 /**
  * Default Settings
  *
@@ -1298,7 +1309,6 @@
 #define XYZ_BELT_PITCH 2
 #define XYZ_PULLEY_TEETH 20
 
-// delta speeds must be the same on xyz
 #define DEFAULT_XYZ_STEPS_PER_UNIT ((XYZ_FULL_STEPS_PER_ROTATION) * (XYZ_MICROSTEPS) / double(XYZ_BELT_PITCH) / double(XYZ_PULLEY_TEETH)) // 80
 #define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 96 }  // default steps per unit for Kossel (GT2, 20 tooth)
 
@@ -1335,7 +1345,7 @@
  *   M204 R    Retract Acceleration
  *   M204 T    Travel Acceleration
  */
-#define DEFAULT_ACCELERATION          600    // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_ACCELERATION           600    // X, Y, Z and E acceleration for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   1000    // X, Y, Z acceleration for travel (non printing) moves
 
@@ -1548,7 +1558,6 @@
  * Deploys by touching z-axis belt. Retracts by pushing the probe down. Uses Z_MIN_PIN.
  */
 //#define Z_PROBE_ALLEN_KEY
-
 #if ENABLED(Z_PROBE_ALLEN_KEY)
   // 2 or 3 sets of coordinates for deploying and retracting the spring loaded touch probe on G29,
   // if servo actuated touch probe is not defined. Uncomment as appropriate for your printer/probe.
@@ -1806,7 +1815,7 @@
 // @section homing
 
 //#define NO_MOTION_BEFORE_HOMING // Inhibit movement until all axes have been homed. Also enable HOME_AFTER_DEACTIVATE for extra safety.
-//#define HOME_AFTER_DEACTIVATE     // Require rehoming after steppers are deactivated. Also enable NO_MOTION_BEFORE_HOMING for extra safety.
+#define HOME_AFTER_DEACTIVATE     // Require rehoming after steppers are deactivated. Also enable NO_MOTION_BEFORE_HOMING for extra safety.
 
 /**
  * Set Z_IDLE_HEIGHT if the Z-Axis moves on its own when steppers are disabled.
@@ -1838,7 +1847,7 @@
 #define X_BED_SIZE ((DELTA_PRINTABLE_RADIUS) * 2)
 #define Y_BED_SIZE ((DELTA_PRINTABLE_RADIUS) * 2)
 
-// Travel limits (mm) after homing, corresponding to endstop positions.
+// Travel limits (linear=mm, rotational=°) after homing, corresponding to endstop positions.
 #define X_MIN_POS -(DELTA_PRINTABLE_RADIUS)
 #define Y_MIN_POS -(DELTA_PRINTABLE_RADIUS)
 #define Z_MIN_POS 0
@@ -2060,9 +2069,11 @@
 #endif
 
 #if ANY(MESH_BED_LEVELING, AUTO_BED_LEVELING_BILINEAR, AUTO_BED_LEVELING_UBL)
-  // Gradually reduce leveling correction until a set height is reached,
-  // at which point movement will be level to the machine's XY plane.
-  // The height can be set with M420 Z<height>
+  /**
+   * Gradually reduce leveling correction until a set height is reached,
+   * at which point movement will be level to the machine's XY plane.
+   * The height can be set with M420 Z<height>
+   */
   //#define ENABLE_LEVELING_FADE_HEIGHT
   #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
     #define DEFAULT_LEVELING_FADE_HEIGHT 10.0 // (mm) Default fade height.
@@ -2095,7 +2106,6 @@
 #if EITHER(AUTO_BED_LEVELING_LINEAR, AUTO_BED_LEVELING_BILINEAR)
 
   // Set the number of grid points per dimension.
-  // Works best with 5 or more points in each dimension.
   #define GRID_MAX_POINTS_X 9
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
 
@@ -2240,8 +2250,8 @@
   #define Z_SAFE_HOMING_Y_POINT Y_CENTER  // Y point for Z homing
 #endif
 
-// Homing speeds (mm/min)
-// Delta only homes to Z
+// Homing speeds (linear=mm/min, rotational=°/min)
+// Homing speeds (linear=mm/min, rotational=°/min)
 #define HOMING_FEEDRATE_MM_M { (50*60), (50*60), (50*60) }
 
 // Validate that endstops are triggered on homing moves
@@ -2321,7 +2331,7 @@
  *   M502 - Revert settings to "factory" defaults. (Follow with M500 to init the EEPROM.)
  */
 #define EEPROM_SETTINGS       // Persistent storage with M500 and M501
-//#define DISABLE_M503        // Saves ~2700 bytes of PROGMEM. Disable for release!
+//#define DISABLE_M503        // Saves ~2700 bytes of flash. Disable for release!
 #define EEPROM_CHITCHAT       // Give feedback on EEPROM commands. Disable to save PROGMEM.
 #define EEPROM_BOOT_SILENT    // Keep M503 quiet and only give errors during first load
 #if ENABLED(EEPROM_SETTINGS)
@@ -2394,8 +2404,7 @@
 #if ENABLED(NOZZLE_PARK_FEATURE)
   // Specify a park position as { X, Y, Z_raise }
   #define NOZZLE_PARK_POINT { 0, 0, 20 }
-  //#define NOZZLE_PARK_X_ONLY          // X move only is required to park
-  //#define NOZZLE_PARK_Y_ONLY          // Y move only is required to park
+  #define NOZZLE_PARK_MOVE          0   // Park motion: 0 = XY Move, 1 = X Only, 2 = Y Only, 3 = X before Y, 4 = Y before X
   #define NOZZLE_PARK_Z_RAISE_MIN   2   // (mm) Always raise Z by at least this distance
   #define NOZZLE_PARK_XY_FEEDRATE 100   // (mm/s) X and Y axes feedrate (also used for delta Z axis)
   #define NOZZLE_PARK_Z_FEEDRATE 100    // (mm/s) Z axis feedrate (not used for delta printers)
@@ -2573,7 +2582,7 @@
  *
  * :{ 'en':'English', 'an':'Aragonese', 'bg':'Bulgarian', 'ca':'Catalan', 'cz':'Czech', 'da':'Danish', 'de':'German', 'el':'Greek (Greece)', 'el_CY':'Greek (Cyprus)', 'es':'Spanish', 'eu':'Basque-Euskera', 'fi':'Finnish', 'fr':'French', 'gl':'Galician', 'hr':'Croatian', 'hu':'Hungarian', 'it':'Italian', 'jp_kana':'Japanese', 'ko_KR':'Korean (South Korea)', 'nl':'Dutch', 'pl':'Polish', 'pt':'Portuguese', 'pt_br':'Portuguese (Brazilian)', 'ro':'Romanian', 'ru':'Russian', 'sk':'Slovak', 'sv':'Swedish', 'tr':'Turkish', 'uk':'Ukrainian', 'vi':'Vietnamese', 'zh_CN':'Chinese (Simplified)', 'zh_TW':'Chinese (Traditional)' }
  */
-#define LCD_LANGUAGE fr
+#define LCD_LANGUAGE en
 
 /**
  * LCD Character Set
@@ -2636,7 +2645,7 @@
 // This option overrides the default number of encoder pulses needed to
 // produce one step. Should be increased for high-resolution encoders.
 //
-#define ENCODER_PULSES_PER_STEP 4
+#define ENCODER_PULSES_PER_STEP 3
 
 //
 // Use this option to override the number of step signals required to
@@ -2659,7 +2668,7 @@
 //
 //  Set this option if CLOCKWISE causes values to DECREASE
 //
-//#define REVERSE_ENCODER_DIRECTION
+#define REVERSE_ENCODER_DIRECTION
 
 //
 // This option reverses the encoder direction for navigating LCD menus.
@@ -2711,7 +2720,7 @@
 //  M300 S<frequency Hz> P<duration ms>
 //
 #define LCD_FEEDBACK_FREQUENCY_DURATION_MS 2
-#define LCD_FEEDBACK_FREQUENCY_HZ 1000
+#define LCD_FEEDBACK_FREQUENCY_HZ 5000
 
 //=============================================================================
 //======================== LCD / Controller Selection =========================
@@ -3367,7 +3376,7 @@
 // Use software PWM to drive the fan, as for the heaters. This uses a very low frequency
 // which is not as annoying as with the hardware PWM. On the other hand, if this frequency
 // is too low, you should also increment SOFT_PWM_SCALE.
-//#define FAN_SOFT_PWM
+#define FAN_SOFT_PWM
 
 // Incrementing this by 1 will double the software PWM frequency,
 // affecting heaters, and the fan if FAN_SOFT_PWM is enabled.

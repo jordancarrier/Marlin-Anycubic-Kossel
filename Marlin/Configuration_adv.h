@@ -471,10 +471,10 @@
  * Thermistors able to support high temperature tend to have a hard time getting
  * good readings at room and lower temperatures. This means TEMP_SENSOR_X_RAW_LO_TEMP
  * will probably be caught when the heating element first turns on during the
- * preheating process, which will trigger a MINTEMP error as a safety measure
+ * preheating process, which will trigger a min_temp_error as a safety measure
  * and force stop everything.
  * To circumvent this limitation, we allow for a preheat time (during which,
- * MINTEMP error won't be triggered) and add a min_temp buffer to handle
+ * min_temp_error won't be triggered) and add a min_temp buffer to handle
  * aberrant readings.
  *
  * If you want to enable this feature for your hotend thermistor(s)
@@ -482,7 +482,7 @@
  */
 
 // The number of consecutive low temperature errors that can occur
-// before a MINTEMP error is triggered. (Shouldn't be more than 10.)
+// before a min_temp_error is triggered. (Shouldn't be more than 10.)
 //#define MAX_CONSECUTIVE_LOW_TEMPERATURE_ERROR_ALLOWED 0
 
 /**
@@ -880,9 +880,8 @@
 
 //#define SENSORLESS_BACKOFF_MM  { 2, 2, 0 }  // (linear=mm, rotational=°) Backoff from endstops before sensorless homing
 
-#define HOMING_BUMP_MM      { 5, 5, 5 }       // (mm) Backoff from endstops after first bump
-                                              // For delta all values must be the same
-#define HOMING_BUMP_DIVISOR { 10, 10, 10 }       // Re-Bump Speed Divisor (Divides the Homing Feedrate)
+#define HOMING_BUMP_MM      { 5, 5, 5 }       // (linear=mm, rotational=°) Backoff from endstops after first bump
+#define HOMING_BUMP_DIVISOR { 10, 10, 10 }    // Re-Bump Speed Divisor (Divides the Homing Feedrate)
 
 //#define HOMING_BACKOFF_POST_MM { 2, 2, 2 }  // (linear=mm, rotational=°) Backoff from endstops after homing
 //#define XY_COUNTERPART_BACKOFF_MM 0         // (mm) Backoff X after homing Y, and vice-versa
@@ -1108,6 +1107,12 @@
 #define INVERT_X_STEP_PIN false
 #define INVERT_Y_STEP_PIN false
 #define INVERT_Z_STEP_PIN false
+#define INVERT_I_STEP_PIN false
+#define INVERT_J_STEP_PIN false
+#define INVERT_K_STEP_PIN false
+#define INVERT_U_STEP_PIN false
+#define INVERT_V_STEP_PIN false
+#define INVERT_W_STEP_PIN false
 #define INVERT_E_STEP_PIN false
 
 /**
@@ -1119,6 +1124,12 @@
 #define DISABLE_INACTIVE_X true
 #define DISABLE_INACTIVE_Y true
 #define DISABLE_INACTIVE_Z true  // Set 'false' if the nozzle could fall onto your printed part!
+#define DISABLE_INACTIVE_I true
+#define DISABLE_INACTIVE_J true
+#define DISABLE_INACTIVE_K true
+#define DISABLE_INACTIVE_U true
+#define DISABLE_INACTIVE_V true
+#define DISABLE_INACTIVE_W true
 #define DISABLE_INACTIVE_E true
 
 // Default Minimum Feedrates for printing and travel moves
@@ -1336,7 +1347,7 @@
 
 // @section lcd
 
-#if ANY(HAS_LCD_MENU, EXTENSIBLE_UI, HAS_DWIN_E3V2)
+#if HAS_MANUAL_MOVE_MENU
   #define MANUAL_FEEDRATE_XYZ 50*60
   #define MANUAL_FEEDRATE { MANUAL_FEEDRATE_XYZ, MANUAL_FEEDRATE_XYZ, MANUAL_FEEDRATE_XYZ, 60 } // (mm/min) Feedrates for manual moves along X, Y, Z, E from panel
   #define FINE_MANUAL_MOVE 0.025    // (mm) Smallest manual move (< 0.1mm) applying to Z on most machines
@@ -1420,9 +1431,9 @@
   #define SOUND_ON_DEFAULT    // Buzzer/speaker default enabled state
 #endif
 
-#if EITHER(HAS_DISPLAY, DWIN_CREALITY_LCD_ENHANCED)
-  // The timeout (in ms) to return to the status screen from sub-menus
-  #define LCD_TIMEOUT_TO_STATUS 15000
+#if EITHER(HAS_DISPLAY, DWIN_LCD_PROUI)
+  // The timeout to return to the status screen from sub-menus
+  #define LCD_TIMEOUT_TO_STATUS 15000     // (ms)
 
   #if ENABLED(SHOW_BOOTSCREEN)
     #define BOOTSCREEN_TIMEOUT 4000       // (ms) Total Duration to display the boot screen(s)
@@ -1434,11 +1445,11 @@
 // Scroll a longer status message into view
 #define STATUS_MESSAGE_SCROLLING
 
+  // Apply a timeout to low-priority status messages
+  //#define STATUS_MESSAGE_TIMEOUT_SEC 30 // (seconds)
+
 // On the Info Screen, display XY with one decimal place when possible
 //#define LCD_DECIMAL_SMALL_XY
-
-// Add an 'M73' G-code to set the current percentage
-//#define LCD_SET_PROGRESS_MANUALLY
 
 // Show the E position (filament used) during printing
 //#define LCD_SHOW_E_TOTAL
@@ -1631,8 +1642,7 @@
   //#define LONG_FILENAME_WRITE_SUPPORT   // Create / delete files with long filenames via M28, M30, and Binary Transfer Protocol
   //#define M20_TIMESTAMP_SUPPORT         // Include timestamps by adding the 'T' flag to M20 commands
 
-  // Enable this option to scroll long filenames in the SD card menu
-  #define SCROLL_LONG_FILENAMES
+  #define SCROLL_LONG_FILENAMES           // Scroll long filenames in the SD card menu
 
   //#define SD_ABORT_NO_COOLDOWN          // Leave the heaters on after Stop Print (not recommended!)
 
@@ -2714,8 +2724,8 @@
    */
   #define INTERPOLATE      true
 
-  #if AXIS_IS_TMC(X)
-    #define X_CURRENT       700        // (mA) RMS current. Multiply by 1.414 for peak current.
+   #if AXIS_IS_TMC_CONFIG(X)
+    #define X_CURRENT       800        // (mA) RMS current. Multiply by 1.414 for peak current.
     #define X_CURRENT_HOME  X_CURRENT  // (mA) RMS current for sensorless homing
     #define X_MICROSTEPS     16        // 0..256
     #define X_RSENSE          0.11     // Multiplied x1000 for TMC26X
@@ -2724,8 +2734,8 @@
     //#define X_HOLD_MULTIPLIER 0.5    // Enable to override 'HOLD_MULTIPLIER' for the X axis
   #endif
 
-  #if AXIS_IS_TMC(X2)
-    #define X2_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(X2)
+    #define X2_CURRENT      800
     #define X2_CURRENT_HOME X2_CURRENT
     #define X2_MICROSTEPS    X_MICROSTEPS
     #define X2_RSENSE         0.11
@@ -2734,8 +2744,8 @@
     //#define X2_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(Y)
-    #define Y_CURRENT       700
+  #if AXIS_IS_TMC_CONFIG(Y)
+    #define Y_CURRENT       800
     #define Y_CURRENT_HOME  Y_CURRENT
     #define Y_MICROSTEPS     16
     #define Y_RSENSE          0.11
@@ -2744,8 +2754,8 @@
     //#define Y_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(Y2)
-    #define Y2_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(Y2)
+    #define Y2_CURRENT      800
     #define Y2_CURRENT_HOME Y2_CURRENT
     #define Y2_MICROSTEPS    Y_MICROSTEPS
     #define Y2_RSENSE         0.11
@@ -2754,8 +2764,8 @@
     //#define Y2_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(Z)
-    #define Z_CURRENT       700
+  #if AXIS_IS_TMC_CONFIG(Z)
+    #define Z_CURRENT       800
     #define Z_CURRENT_HOME  Z_CURRENT
     #define Z_MICROSTEPS     16
     #define Z_RSENSE          0.11
@@ -2764,8 +2774,8 @@
     //#define Z_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(Z2)
-    #define Z2_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(Z2)
+    #define Z2_CURRENT      800
     #define Z2_CURRENT_HOME Z2_CURRENT
     #define Z2_MICROSTEPS    Z_MICROSTEPS
     #define Z2_RSENSE         0.11
@@ -2774,8 +2784,8 @@
     //#define Z2_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(Z3)
-    #define Z3_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(Z3)
+    #define Z3_CURRENT      800
     #define Z3_CURRENT_HOME Z3_CURRENT
     #define Z3_MICROSTEPS    Z_MICROSTEPS
     #define Z3_RSENSE         0.11
@@ -2784,8 +2794,8 @@
     //#define Z3_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(Z4)
-    #define Z4_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(Z4)
+    #define Z4_CURRENT      800
     #define Z4_CURRENT_HOME Z4_CURRENT
     #define Z4_MICROSTEPS    Z_MICROSTEPS
     #define Z4_RSENSE         0.11
@@ -2794,8 +2804,8 @@
     //#define Z4_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(I)
-    #define I_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(I)
+    #define I_CURRENT      800
     #define I_CURRENT_HOME I_CURRENT
     #define I_MICROSTEPS    16
     #define I_RSENSE         0.11
@@ -2804,8 +2814,8 @@
     //#define I_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(J)
-    #define J_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(J)
+    #define J_CURRENT      800
     #define J_CURRENT_HOME J_CURRENT
     #define J_MICROSTEPS    16
     #define J_RSENSE         0.11
@@ -2814,8 +2824,8 @@
     //#define J_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(K)
-    #define K_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(K)
+    #define K_CURRENT      800
     #define K_CURRENT_HOME K_CURRENT
     #define K_MICROSTEPS    16
     #define K_RSENSE         0.11
@@ -2824,8 +2834,38 @@
     //#define K_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(E0)
-    #define E0_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(U)
+    #define U_CURRENT      800
+    #define U_CURRENT_HOME U_CURRENT
+    #define U_MICROSTEPS     8
+    #define U_RSENSE         0.11
+    #define U_CHAIN_POS     -1
+    //#define U_INTERPOLATE  true
+    //#define U_HOLD_MULTIPLIER 0.5
+  #endif
+
+  #if AXIS_IS_TMC_CONFIG(V)
+    #define V_CURRENT      800
+    #define V_CURRENT_HOME V_CURRENT
+    #define V_MICROSTEPS     8
+    #define V_RSENSE         0.11
+    #define V_CHAIN_POS     -1
+    //#define V_INTERPOLATE  true
+    //#define V_HOLD_MULTIPLIER 0.5
+  #endif
+
+  #if AXIS_IS_TMC_CONFIG(W)
+    #define W_CURRENT      800
+    #define W_CURRENT_HOME W_CURRENT
+    #define W_MICROSTEPS     8
+    #define W_RSENSE         0.11
+    #define W_CHAIN_POS     -1
+    //#define W_INTERPOLATE  true
+    //#define W_HOLD_MULTIPLIER 0.5
+  #endif
+
+  #if AXIS_IS_TMC_CONFIG(E0)
+    #define E0_CURRENT      800
     #define E0_MICROSTEPS    16
     #define E0_RSENSE         0.11
     #define E0_CHAIN_POS     -1
@@ -2833,8 +2873,8 @@
     //#define E0_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(E1)
-    #define E1_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(E1)
+    #define E1_CURRENT      800
     #define E1_MICROSTEPS   E0_MICROSTEPS
     #define E1_RSENSE         0.11
     #define E1_CHAIN_POS     -1
@@ -2842,8 +2882,8 @@
     //#define E1_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(E2)
-    #define E2_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(E2)
+    #define E2_CURRENT      800
     #define E2_MICROSTEPS   E0_MICROSTEPS
     #define E2_RSENSE         0.11
     #define E2_CHAIN_POS     -1
@@ -2851,8 +2891,8 @@
     //#define E2_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(E3)
-    #define E3_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(E3)
+    #define E3_CURRENT      800
     #define E3_MICROSTEPS   E0_MICROSTEPS
     #define E3_RSENSE         0.11
     #define E3_CHAIN_POS     -1
@@ -2860,8 +2900,8 @@
     //#define E3_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(E4)
-    #define E4_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(E4)
+    #define E4_CURRENT      800
     #define E4_MICROSTEPS   E0_MICROSTEPS
     #define E4_RSENSE         0.11
     #define E4_CHAIN_POS     -1
@@ -2869,8 +2909,8 @@
     //#define E4_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(E5)
-    #define E5_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(E5)
+    #define E5_CURRENT      800
     #define E5_MICROSTEPS   E0_MICROSTEPS
     #define E5_RSENSE         0.11
     #define E5_CHAIN_POS     -1
@@ -2878,8 +2918,8 @@
     //#define E5_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(E6)
-    #define E6_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(E6)
+    #define E6_CURRENT      800
     #define E6_MICROSTEPS   E0_MICROSTEPS
     #define E6_RSENSE         0.11
     #define E6_CHAIN_POS     -1
@@ -2887,8 +2927,8 @@
     //#define E6_HOLD_MULTIPLIER 0.5
   #endif
 
-  #if AXIS_IS_TMC(E7)
-    #define E7_CURRENT      700
+  #if AXIS_IS_TMC_CONFIG(E7)
+    #define E7_CURRENT      800
     #define E7_MICROSTEPS   E0_MICROSTEPS
     #define E7_RSENSE         0.11
     #define E7_CHAIN_POS     -1
@@ -3183,227 +3223,6 @@
   #define TMC_ADV() {  }
 
 #endif // HAS_TRINAMIC_CONFIG || HAS_TMC26X
-
-// @section L64XX
-
-/**
- * L64XX Stepper Driver options
- *
- * Arduino-L6470 library (0.8.0 or higher) is required.
- * https://github.com/ameyer/Arduino-L6470
- *
- * Requires the following to be defined in your pins_YOUR_BOARD file
- *     L6470_CHAIN_SCK_PIN
- *     L6470_CHAIN_MISO_PIN
- *     L6470_CHAIN_MOSI_PIN
- *     L6470_CHAIN_SS_PIN
- *     ENABLE_RESET_L64XX_CHIPS(Q)  where Q is 1 to enable and 0 to reset
- */
-
-#if HAS_L64XX
-
-  //#define L6470_CHITCHAT        // Display additional status info
-
-  #if AXIS_IS_L64XX(X)
-    #define X_MICROSTEPS       128  // Number of microsteps (VALID: 1, 2, 4, 8, 16, 32, 128) - L6474 max is 16
-    #define X_OVERCURRENT     2000  // (mA) Current where the driver detects an over current
-                                    //   L6470 & L6474 - VALID: 375 x (1 - 16) - 6A max - rounds down
-                                    //   POWERSTEP01: VALID: 1000 x (1 - 32) - 32A max - rounds down
-    #define X_STALLCURRENT    1500  // (mA) Current where the driver detects a stall (VALID: 31.25 * (1-128) -  4A max - rounds down)
-                                    //   L6470 & L6474 - VALID: 31.25 * (1-128) -  4A max - rounds down
-                                    //   POWERSTEP01: VALID: 200 x (1 - 32) - 6.4A max - rounds down
-                                    //   L6474 - STALLCURRENT setting is used to set the nominal (TVAL) current
-    #define X_MAX_VOLTAGE      127  // 0-255, Maximum effective voltage seen by stepper - not used by L6474
-    #define X_CHAIN_POS         -1  // Position in SPI chain, 0=Not in chain, 1=Nearest MOSI
-    #define X_SLEW_RATE          1  // 0-3, Slew 0 is slowest, 3 is fastest
-  #endif
-
-  #if AXIS_IS_L64XX(X2)
-    #define X2_MICROSTEPS     X_MICROSTEPS
-    #define X2_OVERCURRENT            2000
-    #define X2_STALLCURRENT           1500
-    #define X2_MAX_VOLTAGE             127
-    #define X2_CHAIN_POS                -1
-    #define X2_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(Y)
-    #define Y_MICROSTEPS               128
-    #define Y_OVERCURRENT             2000
-    #define Y_STALLCURRENT            1500
-    #define Y_MAX_VOLTAGE              127
-    #define Y_CHAIN_POS                 -1
-    #define Y_SLEW_RATE                  1
-  #endif
-
-  #if AXIS_IS_L64XX(Y2)
-    #define Y2_MICROSTEPS     Y_MICROSTEPS
-    #define Y2_OVERCURRENT            2000
-    #define Y2_STALLCURRENT           1500
-    #define Y2_MAX_VOLTAGE             127
-    #define Y2_CHAIN_POS                -1
-    #define Y2_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(Z)
-    #define Z_MICROSTEPS               128
-    #define Z_OVERCURRENT             2000
-    #define Z_STALLCURRENT            1500
-    #define Z_MAX_VOLTAGE              127
-    #define Z_CHAIN_POS                 -1
-    #define Z_SLEW_RATE                  1
-  #endif
-
-  #if AXIS_IS_L64XX(Z2)
-    #define Z2_MICROSTEPS     Z_MICROSTEPS
-    #define Z2_OVERCURRENT            2000
-    #define Z2_STALLCURRENT           1500
-    #define Z2_MAX_VOLTAGE             127
-    #define Z2_CHAIN_POS                -1
-    #define Z2_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(Z3)
-    #define Z3_MICROSTEPS     Z_MICROSTEPS
-    #define Z3_OVERCURRENT            2000
-    #define Z3_STALLCURRENT           1500
-    #define Z3_MAX_VOLTAGE             127
-    #define Z3_CHAIN_POS                -1
-    #define Z3_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(Z4)
-    #define Z4_MICROSTEPS     Z_MICROSTEPS
-    #define Z4_OVERCURRENT            2000
-    #define Z4_STALLCURRENT           1500
-    #define Z4_MAX_VOLTAGE             127
-    #define Z4_CHAIN_POS                -1
-    #define Z4_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_DRIVER_TYPE_I(L6470)
-    #define I_MICROSTEPS      128
-    #define I_OVERCURRENT    2000
-    #define I_STALLCURRENT   1500
-    #define I_MAX_VOLTAGE     127
-    #define I_CHAIN_POS        -1
-    #define I_SLEW_RATE         1
-  #endif
-
-  #if AXIS_DRIVER_TYPE_J(L6470)
-    #define J_MICROSTEPS      128
-    #define J_OVERCURRENT    2000
-    #define J_STALLCURRENT   1500
-    #define J_MAX_VOLTAGE     127
-    #define J_CHAIN_POS        -1
-    #define J_SLEW_RATE         1
-  #endif
-
-  #if AXIS_DRIVER_TYPE_K(L6470)
-    #define K_MICROSTEPS      128
-    #define K_OVERCURRENT    2000
-    #define K_STALLCURRENT   1500
-    #define K_MAX_VOLTAGE     127
-    #define K_CHAIN_POS        -1
-    #define K_SLEW_RATE         1
-  #endif
-
-  #if AXIS_IS_L64XX(E0)
-    #define E0_MICROSTEPS              128
-    #define E0_OVERCURRENT            2000
-    #define E0_STALLCURRENT           1500
-    #define E0_MAX_VOLTAGE             127
-    #define E0_CHAIN_POS                -1
-    #define E0_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(E1)
-    #define E1_MICROSTEPS    E0_MICROSTEPS
-    #define E1_OVERCURRENT            2000
-    #define E1_STALLCURRENT           1500
-    #define E1_MAX_VOLTAGE             127
-    #define E1_CHAIN_POS                -1
-    #define E1_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(E2)
-    #define E2_MICROSTEPS    E0_MICROSTEPS
-    #define E2_OVERCURRENT            2000
-    #define E2_STALLCURRENT           1500
-    #define E2_MAX_VOLTAGE             127
-    #define E2_CHAIN_POS                -1
-    #define E2_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(E3)
-    #define E3_MICROSTEPS    E0_MICROSTEPS
-    #define E3_OVERCURRENT            2000
-    #define E3_STALLCURRENT           1500
-    #define E3_MAX_VOLTAGE             127
-    #define E3_CHAIN_POS                -1
-    #define E3_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(E4)
-    #define E4_MICROSTEPS    E0_MICROSTEPS
-    #define E4_OVERCURRENT            2000
-    #define E4_STALLCURRENT           1500
-    #define E4_MAX_VOLTAGE             127
-    #define E4_CHAIN_POS                -1
-    #define E4_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(E5)
-    #define E5_MICROSTEPS    E0_MICROSTEPS
-    #define E5_OVERCURRENT            2000
-    #define E5_STALLCURRENT           1500
-    #define E5_MAX_VOLTAGE             127
-    #define E5_CHAIN_POS                -1
-    #define E5_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(E6)
-    #define E6_MICROSTEPS    E0_MICROSTEPS
-    #define E6_OVERCURRENT            2000
-    #define E6_STALLCURRENT           1500
-    #define E6_MAX_VOLTAGE             127
-    #define E6_CHAIN_POS                -1
-    #define E6_SLEW_RATE                 1
-  #endif
-
-  #if AXIS_IS_L64XX(E7)
-    #define E7_MICROSTEPS    E0_MICROSTEPS
-    #define E7_OVERCURRENT            2000
-    #define E7_STALLCURRENT           1500
-    #define E7_MAX_VOLTAGE             127
-    #define E7_CHAIN_POS                -1
-    #define E7_SLEW_RATE                 1
-  #endif
- 
-  /**
-   * Monitor L6470 drivers for error conditions like over temperature and over current.
-   * In the case of over temperature Marlin can decrease the drive until the error condition clears.
-   * Other detected conditions can be used to stop the current print.
-   * Relevant G-codes:
-   * M906 - I1/2/3/4/5  Set or get motor drive level using axis codes X, Y, Z, E. Report values if no axis codes given.
-   *         I not present or I0 or I1 - X, Y, Z or E0
-   *         I2 - X2, Y2, Z2 or E1
-   *         I3 - Z3 or E3
-   *         I4 - Z4 or E4
-   *         I5 - E5
-   * M916 - Increase drive level until get thermal warning
-   * M917 - Find minimum current thresholds
-   * M918 - Increase speed until max or error
-   * M122 S0/1 - Report driver parameters
-   */
-  //#define MONITOR_L6470_DRIVER_STATUS
-
-  #if ENABLED(MONITOR_L6470_DRIVER_STATUS)
-    #define KVAL_HOLD_STEP_DOWN     1
-    //#define L6470_STOP_ON_ERROR
-  #endif
-
-#endif // HAS_L64XX
 
 // @section i2cbus
 
