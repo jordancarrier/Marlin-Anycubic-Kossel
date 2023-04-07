@@ -889,7 +889,7 @@
     // Maximum reachable area
     #define DELTA_MAX_RADIUS       120.0  // (mm)
     // Center-to-center distance of the holes in the diagonal push rods.
-    #define DELTA_DIAGONAL_ROD 253.7        // (mm) GOOD
+    #define DELTA_DIAGONAL_ROD 253.2        // (mm) GOOD
     // Horizontal offset from middle of printer to smooth rod center.
     #define DELTA_SMOOTH_ROD_OFFSET 177   // (mm) GOOD
     // Horizontal offset of the universal joints on the end effector.
